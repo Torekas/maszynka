@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>File Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0; /* Light gray background */
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff; /* White background for the main content */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Box shadow for a card-like effect */
+        }
+
+        .table-scroll {
+            max-height: 400px;
+            overflow-y: scroll;
+        }
+
+        h1, h2 {
+            color: #333; /* Dark gray for headings */
+        }
+
+        /* Style the file upload button */
+        input[type="file"] {
+            padding: 20px;
+            border: 5px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+
+        /* Style the submit button */
+        input[type="submit"] {
+            padding: 10px 20px;
+            background-color: #007bff; /* Blue submit button */
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* Style the checkboxes */
+        input[type="checkbox"] {
+            margin-right: 5px;
+        }
+
+        /* Style the plots container */
+        .plots-container {
+            display: block;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            margin-top: 10px;
+        }
+
+        /* Style each plot */
+        .plot {
+            flex-basis: 10%; /* Adjust the width as needed */
+            margin: 5px;
+            max-width: 150px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2); /* Box shadow for each plot */
+        }
+
+        /* Style the plot titles */
+        .plot h3 {
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>File Uploading</h1>
+        <form method="POST" action="/upload" enctype="multipart/form-data">
+            <input type="file" name="file" required>
+            <br><br>
+            <input type="submit" value="Upload">
+        </form>
+
+        {% if data %}
+        <div class="table-scroll">
+            {{ data|safe }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/describe">
+            <input type="submit" value="Describe">
+        </form>
+
+        {% if describe %}
+        <h1>Basic statistics</h1>
+        <h2>Describe</h2>
+        <div class="table-scroll">
+            {{ describe|safe }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/information">
+            <input type="submit" value="Info">
+        </form>
+
+        {% if information %}
+        <h2>Info</h2>
+        <div class="table-scroll">
+            {{ information|safe }}
+        </div>
+        {% endif %}
+
+        <h1>Choose Columns</h1>
+        <form method="POST" action="/columns">
+            <input type="submit" value="Choose Columns">
+        </form>
+
+        {% if show_columns %}
+        <form method="POST" action="/execute">
+            {% for column in columns %}
+            <input type="checkbox" name="column" value="{{ column }}">{{ column }}<br>
+            {% endfor %}
+            <br>
+            <input type="submit" value="Execute Function">
+        </form>
+        {% endif %}
+
+        {% if show_plots %}
+        <h2>Plots</h2>
+        <div class="plots-container">
+            {% for i in range(selected_columns|length) %}
+            <div class="plot">
+                <h3>Histogram - {{ selected_columns[i] }}</h3>
+                <img src="data:image/png;base64, {{ session['plots'][2*i] }}" alt="Histogram">
+            </div>
+            <div class="plot">
+                <h3>Boxplot - {{ selected_columns[i] }}</h3>
+                <img src="data:image/png;base64, {{ session['plots'][2*i+1] }}" alt="Boxplot">
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
