@@ -62,13 +62,17 @@ def columns():
     session['columns'] = columns
     return render_template('index.html', show_columns=True, columns=columns)
 
+selected_columns =[]
 @app.route('/execute', methods=['POST'])
 def execute():
     global df
+    global selected_columns
     columns = df.columns.tolist()
     session['columns'] = columns
 
     selected_columns = request.form.getlist('column')
+    session['selected_columns'] = selected_columns
+
 
     if not selected_columns:
         return 'No columns selected.'
@@ -77,7 +81,7 @@ def execute():
 
     for column in selected_columns:
         # Generate histogram
-        plt.figure(figsize=(8, 6))
+        plt.figure(figsize=(4, 2))
         plt.hist(df[column], bins='auto', color='blue')
         plt.xlabel(column)
         plt.ylabel('Frequency')
@@ -94,7 +98,7 @@ def execute():
         plots.append(plot_data)
 
         # Generate boxplot
-        plt.figure(figsize=(8, 6))
+        plt.figure(figsize=(4, 2))
         plt.boxplot(df[column].dropna())
         plt.xlabel(column)
         plt.ylabel('Value')
@@ -113,6 +117,61 @@ def execute():
     session['plots'] = plots
 
     return render_template('index.html', show_plots=True, selected_columns=selected_columns)
+
+def calculate_iqr(column_data):
+    Q1 = column_data.quantile(0.25)
+    Q3 = column_data.quantile(0.75)
+    return Q3 - Q1
+
+# Identify outliers using the IQR method
+def find_outliers_iqr(column_data):
+    Q1 = df[column_data].quantile(0.25)
+    Q3 = df[column_data].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    low_boundary = (Q1 - 1.5 * IQR)
+    upp_boundary = (Q3 + 1.5 * IQR)
+    num_of_outliers_L = (df[column_data][IQR.index] < low_boundary).sum()
+    num_of_outliers_U = (df[column_data][IQR.index] > upp_boundary).sum()
+    outliers_15iqr = pd.DataFrame({
+        'low': low_boundary,
+        'upp': upp_boundary,
+        'ile poniżej low': num_of_outliers_L,
+        'ile powyżej upp': num_of_outliers_U
+    })
+    outliers_15iqr
+
+    return outliers_count
+@app.route('/outliers', methods=['POST'])
+def outliers():
+    global df
+    global selected_columns
+
+    outliers_info = []
+    for col in selected_columns:
+
+        Q1 = df[col].quantile(0.25)
+        Q3 = df[col].quantile(0.75)
+        IQR = Q3 - Q1
+        low_boundary = (Q1 - 1.5 * IQR)
+        upp_boundary = (Q3 + 1.5 * IQR)
+        num_of_outliers_L = (df[col] < low_boundary).sum()
+        num_of_outliers_U = (df[col] > upp_boundary).sum()
+        outliers_info.append({
+            'column': col,
+            'low': low_boundary,
+            'upp': upp_boundary,
+            'ile poniżej low': num_of_outliers_L,
+            'ile powyżej upp': num_of_outliers_U
+        })
+    outliers_df = pd.DataFrame(outliers_info)
+
+    return render_template('index.html', outliers = outliers_df.to_html( classes='table-scroll'))
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

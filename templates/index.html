@@ -5,17 +5,18 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0; /* Light gray background */
+            background-color: #99CCFF; /* Light gray background */
             margin: 0;
             padding: 0;
+            text-align: center; /* Center-align text */
         }
 
         .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #fff; /* White background for the main content */
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Box shadow for a card-like effect */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Make the container take up the full viewport height */
         }
 
         .table-scroll {
@@ -52,23 +53,28 @@
 
         /* Style the plots container */
         .plots-container {
-            display: block;
             flex-wrap: wrap;
-            justify-content: flex-start;
-            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -800px;
+            column-gap: 14em;
         }
 
         /* Style each plot */
         .plot {
-            flex-basis: 10%; /* Adjust the width as needed */
-            margin: 5px;
+            flex-basis: 20%; /* Adjust the width as needed */
+            margin: 10px;
             max-width: 150px;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2); /* Box shadow for each plot */
         }
 
         /* Style the plot titles */
         .plot h3 {
-            margin: 10px;
+            margin: -50px;
+            max-width: 100px;
+        }
+        function clearBox(elementID){
+            document.getElementById(elementID).innerHTML = "";
         }
     </style>
 </head>
@@ -113,6 +119,7 @@
         <h1>Choose Columns</h1>
         <form method="POST" action="/columns">
             <input type="submit" value="Choose Columns">
+            <button onclick="clearBox('cart_item')"> Clear output </button>
         </form>
 
         {% if show_columns %}
@@ -120,26 +127,29 @@
             {% for column in columns %}
             <input type="checkbox" name="column" value="{{ column }}">{{ column }}<br>
             {% endfor %}
-            <br>
+            <br><br>
             <input type="submit" value="Execute Function">
         </form>
         {% endif %}
 
+        <h1>Outliers</h1>
+        <form method="POST" action="/outliers">
+            <input type="submit" value="Choose Columns" >
+        </form>
+        {{ outliers | safe }}
+    </div>
+    <div class="container">
         {% if show_plots %}
-        <h2>Plots</h2>
         <div class="plots-container">
             {% for i in range(selected_columns|length) %}
             <div class="plot">
-                <h3>Histogram - {{ selected_columns[i] }}</h3>
                 <img src="data:image/png;base64, {{ session['plots'][2*i] }}" alt="Histogram">
-            </div>
-            <div class="plot">
-                <h3>Boxplot - {{ selected_columns[i] }}</h3>
                 <img src="data:image/png;base64, {{ session['plots'][2*i+1] }}" alt="Boxplot">
             </div>
             {% endfor %}
         </div>
         {% endif %}
     </div>
+
 </body>
 </html>
