@@ -5,27 +5,62 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #99CCFF; /* Light gray background */
+            background-color: #F0A821; /* Light gray background */
             margin: 0;
             padding: 0;
-            text-align: center; /* Center-align text */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
         }
 
         .container {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh; /* Make the container take up the full viewport height */
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: flex-start;
+            width: 100vw;
+            padding: 20px;
+            border: 1px solid #ccc; /* Add a border to the container */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Add a subtle shadow effect */
+            background-color: #f9f9f9; /* Light gray background color */
         }
 
-        .table-scroll {
+        .left-section {
+            flex: 0.3; /* Adjust the flex value to make it thinner */
+            padding-right: 20px;
+            border-right: 6px solid #FFC300;
+            padding-left: 20px; /* Adjust left padding */
+            margin-left: -1px; /* Shift container to the left to align with border */
+            background-color: #232120; /* White background */
+            height:997px;
+            max-height:997px;
+        }
+
+        .scrollable-content {
+        max-height: 997px; /* Set the maximum height for scrollable content */
+        overflow-y: auto; /* Add vertical scrollbar when content exceeds max height */
+        padding: 0 20px; /* Adjust padding */
+        background-color: #232120; /* White background */
+        }
+
+        .right-section {
+            flex: 1; /* Adjust the flex value */
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            background-color: #232120; /* White background */
+            height:997px;
+            max-height:997px; /* Set a constant height for the right section */
+            overflow: auto; /* Add scrollbars if content overflows */
+        }
+
+	    .table-scroll {
             max-height: 400px;
             overflow-y: scroll;
         }
 
         h1, h2 {
-            color: #333; /* Dark gray for headings */
+            color: #FFFFFF; /* Dark gray for headings */
         }
 
         /* Style the file upload button */
@@ -35,8 +70,7 @@
             border-radius: 4px;
             background-color: #fff;
         }
-
-        /* Style the submit button */
+	    /* Style the submit button */
         input[type="submit"] {
             padding: 10px 20px;
             background-color: #007bff; /* Blue submit button */
@@ -55,17 +89,16 @@
         .plots-container {
             flex-wrap: wrap;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: -800px;
-            column-gap: 14em;
+            align-items: flex-end;
+            gap: 250px; /* Gap between each pair of plots */
+            margin-left:10px;
         }
 
         /* Style each plot */
         .plot {
-            flex-basis: 20%; /* Adjust the width as needed */
-            margin: 10px;
-            max-width: 150px;
+            max-width: 170px;
+            column-gap: 100vh;
+            row-gap: 0px;
         }
 
         /* Style the plot titles */
@@ -80,76 +113,97 @@
 </head>
 <body>
     <div class="container">
-        <h1>File Uploading</h1>
-        <form method="POST" action="/upload" enctype="multipart/form-data">
-            <input type="file" name="file" required>
-            <br><br>
-            <input type="submit" value="Upload">
-        </form>
+        <div class="left-section">
+            <div class="scrollable-content">
+                <h1>File Uploading</h1>
+                <form method="POST" action="/upload" enctype="multipart/form-data" id="upload">
+                    <input type="file" name="file" required>
+                    <br><br>
+                    <input type="submit" value="Upload">
+                </form>
+                <form method="POST" action="/describe_f" id="describe_f">
+                    <input type="submit" value="Describe">
+                </form>
+                <form method="POST" action="/information" id="information">
+                    <input type="submit" value="Info">
+                </form>
+                <h1>Choose Columns</h1>
+                <form method="POST" action="/columns" id="columns">
+                    <input type="submit" value="Choose Columns">
+                    <button onclick="clearBox('cart_item')"> Clear output </button>
+                </form>
+                {% if show_columns %}
+                    <form method="POST" action="/selected_columns_f" id="selected_columns_f">
+                        {% for column in columns %}
+                        <input type="checkbox" name="column" value="{{ column }}">{{ column }}<br>
+                        {% endfor %}
+                        <br><br>
+                        <input type="submit" value="Execute Function">
+                    </form>
+                {% endif %}
+                <h1>Remove outliers with median</h1>
+                    <form method="POST" action="/remove_nulls_median" id="remove_nulls_median">
+                        <input type="submit" value="Remove nulls">
+                    </form>
+                <h1>Remove outliers with mean</h1>
+                    <form method="POST" action="/remove_nulls_mean" id="remove_nulls_mean">
+                        <input type="submit" value="Remove nulls">
+                    </form>
+                <h1>Show boxplots and histograms</h1>
+                    <form method="POST" action="/plots" id="plots">
+                        <input type="submit" value="Show plots">
+                    </form>
+                <h1>Outliers</h1>
+                    <form method="POST" action="/outliers" id="outliers">
+                        <label for="contamination" style = 'color:#FFFFFF'>Contamination:</label>
+                        <input type="number" id="contamination"  name="contamination" step="0.01"><br><br>
 
-        {% if data %}
-        <div class="table-scroll">
-            {{ data|safe }}
-        </div>
-        {% endif %}
-
-        <form method="POST" action="/describe">
-            <input type="submit" value="Describe">
-        </form>
-
-        {% if describe %}
-        <h1>Basic statistics</h1>
-        <h2>Describe</h2>
-        <div class="table-scroll">
-            {{ describe|safe }}
-        </div>
-        {% endif %}
-
-        <form method="POST" action="/information">
-            <input type="submit" value="Info">
-        </form>
-
-        {% if information %}
-        <h2>Info</h2>
-        <div class="table-scroll">
-            {{ information|safe }}
-        </div>
-        {% endif %}
-
-        <h1>Choose Columns</h1>
-        <form method="POST" action="/columns">
-            <input type="submit" value="Choose Columns">
-            <button onclick="clearBox('cart_item')"> Clear output </button>
-        </form>
-
-        {% if show_columns %}
-        <form method="POST" action="/execute">
-            {% for column in columns %}
-            <input type="checkbox" name="column" value="{{ column }}">{{ column }}<br>
-            {% endfor %}
-            <br><br>
-            <input type="submit" value="Execute Function">
-        </form>
-        {% endif %}
-
-        <h1>Outliers</h1>
-        <form method="POST" action="/outliers">
-            <input type="submit" value="Choose Columns" >
-        </form>
-        {{ outliers | safe }}
-    </div>
-    <div class="container">
-        {% if show_plots %}
-        <div class="plots-container">
-            {% for i in range(selected_columns|length) %}
-            <div class="plot">
-                <img src="data:image/png;base64, {{ session['plots'][2*i] }}" alt="Histogram">
-                <img src="data:image/png;base64, {{ session['plots'][2*i+1] }}" alt="Boxplot">
+                        <label for="random_state" style = 'color:#FFFFFF'>Random state:</label>
+                        <input type="number" id="random_state"  name="random_state"><br><br>
+                        <input type="submit" value="Show outliers" >
+                    </form>
             </div>
-            {% endfor %}
         </div>
-        {% endif %}
+        <div class="right-section">
+            <div class="scrollable-content">
+                {% if data %}
+                <div class="table-scroll">
+                    {{ data|safe }}
+                </div>
+                {% endif %}
+                <div class="table-scroll">
+                    {{ describe|safe }}
+                </div>
+                {% if information %}
+                <h2>Info</h2>
+                <div class="table-scroll" style = 'height: 10em;'>
+                    {{ information|safe }}
+                </div>
+                {% endif %}
+                {% if information_1 %}
+                    <h2>Info</h2>
+                    <div class="table-scroll">
+                        {{ information_1|safe }}
+                    </div>
+                {% endif %}
+                {% if information_2 %}
+                    <h2>Info</h2>
+                    <div class="table-scroll">
+                        {{ information_2|safe }}
+                    </div>
+                {% endif %}
+                <div class="plots-container">
+                    {% if show_plots %}
+                        {% for i in range(selected_columns|length) %}
+                            <div class="plot">
+                                <img src="data:image/png;base64, {{ session['plots'][2*i] }}" alt="Histogram">
+                                <img src="data:image/png;base64, {{ session['plots'][2*i+1] }}" alt="Boxplot">
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                {{ outliers | safe }}
+            </div>
+        </div>
     </div>
-
 </body>
-</html>
